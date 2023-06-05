@@ -538,7 +538,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                                   TextSpan(
                                     text: '${f.format(totalSalary)}'.replaceAll(',', ' '),
                                     style: TextStyle(
-                                      fontSize: 40,
+                                      fontSize: 50,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
