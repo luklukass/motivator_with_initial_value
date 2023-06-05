@@ -46,12 +46,18 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   int remainingDays = 0;
   int passedDays = 0;
   int totalEarnedMoney = 0;
+  int totalSalary = 0;
   var f = NumberFormat('#,###');
   TextEditingController earnedMoneyController = TextEditingController();
 
   void saveEarnedMoney(int value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setInt('earnedMoney', value);
+  }
+
+  void savetotalSalary(int value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('totalSalary', value);
   }
 
   @override
@@ -67,6 +73,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
           computePassedDays();
           computeRemainingDays();
           computeEarnedMoney();
+          computetotalSalary();
         });
       }
 
@@ -76,6 +83,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
           computePassedDays();
           computeRemainingDays();
           computeEarnedMoney();
+          computetotalSalary();
         });
       }
 
@@ -87,6 +95,11 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
       if (prefs.containsKey('earnedMoneyPerDay')) {
         setState(() {
           earnedMoneyController.text = prefs.getInt('earnedMoneyPerDay').toString();
+        });
+      }
+      if (prefs.containsKey('totalSalary')) {
+        setState(() {
+          totalSalary = prefs.getInt('totalSalary') ?? 0;
         });
       }
     });
@@ -120,6 +133,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
         computePassedDays();
         computeRemainingDays();
         computeEarnedMoney();
+        computetotalSalary();
       });
 
       // Save arrival date to shared preferences
@@ -149,6 +163,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
         computePassedDays();
         computeRemainingDays();
         computeEarnedMoney();
+        computetotalSalary();
       });
 
       // Save departure date to shared preferences
@@ -172,6 +187,21 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
       passedDays = difference.inDays;
     } else {
       passedDays = 0;
+    }
+  }
+
+  void computetotalSalary() {
+    if (arrivalDate != null && departureDate != null && earnedMoneyController.text.isNotEmpty) {
+      int earnedMoneyPerDay = int.tryParse(earnedMoneyController.text) ?? 0;
+      int totalDays = passedDays + remainingDays + 1;
+      totalSalary = earnedMoneyPerDay * totalDays;
+      savetotalSalary(totalSalary); // Save total salary value
+
+      // Save the input value to shared preferences
+      saveEarnedMoneyPerDay(earnedMoneyPerDay);
+    } else {
+      totalSalary = 0;
+      savetotalSalary(0); // Save 0 when no value is available
     }
   }
 
@@ -199,6 +229,14 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
       computeEarnedMoney();
     });
   }
+
+
+  void handleCheckButt() {
+    setState(() {
+      computetotalSalary();
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -453,6 +491,52 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                                   ),
                                   TextSpan(
                                     text: '${f.format(totalEarnedMoney)}'.replaceAll(',', ' '),
+                                    style: TextStyle(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: handleCheckButt,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10), // Set circular corners
+                        child: Container(
+                          height: 150,
+                          color: Colors.grey,
+                          child: Center(
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: 'Celková částka: \n',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '${f.format(totalSalary)}'.replaceAll(',', ' '),
                                     style: TextStyle(
                                       fontSize: 40,
                                       fontWeight: FontWeight.bold,
