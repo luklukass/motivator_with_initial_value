@@ -208,7 +208,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   void computeEarnedMoney() {
     if (arrivalDate != null && earnedMoneyController.text.isNotEmpty) {
       int earnedMoneyPerDay = int.tryParse(earnedMoneyController.text) ?? 0;
-      totalEarnedMoney = earnedMoneyPerDay * passedDays;
+      totalEarnedMoney = earnedMoneyPerDay * ( passedDays + 1);
       saveEarnedMoney(totalEarnedMoney); // Save earned money value
 
       // Save the input value to shared preferences
