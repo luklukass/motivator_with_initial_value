@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -47,10 +48,47 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   int totalEarnedMoney = 0;
   TextEditingController earnedMoneyController = TextEditingController();
 
+  void saveEarnedMoney(int value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('earnedMoney', value);
+  }
+
   @override
   void initState() {
     super.initState();
     earnedMoneyController.addListener(computeEarnedMoney);
+
+    // Retrieve saved dates from shared preferences
+    SharedPreferences.getInstance().then((prefs) {
+      if (prefs.containsKey('arrivalDate')) {
+        setState(() {
+          arrivalDate = DateTime.parse(prefs.getString('arrivalDate')!);
+          computePassedDays();
+          computeRemainingDays();
+          computeEarnedMoney();
+        });
+      }
+
+      if (prefs.containsKey('departureDate')) {
+        setState(() {
+          departureDate = DateTime.parse(prefs.getString('departureDate')!);
+          computePassedDays();
+          computeRemainingDays();
+          computeEarnedMoney();
+        });
+      }
+
+      if (prefs.containsKey('earnedMoney')) {
+        setState(() {
+          totalEarnedMoney = prefs.getInt('earnedMoney') ?? 0;
+        });
+      }
+      if (prefs.containsKey('earnedMoneyPerDay')) {
+        setState(() {
+          earnedMoneyController.text = prefs.getInt('earnedMoneyPerDay').toString();
+        });
+      }
+    });
   }
 
   @override
@@ -64,7 +102,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
     final DateTime? picked = await showDatePicker(
       locale: Locale('cs', 'CZ'), // Czech
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: arrivalDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       builder: (BuildContext context, Widget? child) {
@@ -78,8 +116,14 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
     if (picked != null) {
       setState(() {
         arrivalDate = picked;
+        computePassedDays();
         computeRemainingDays();
+        computeEarnedMoney();
       });
+
+      // Save arrival date to shared preferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('arrivalDate', arrivalDate.toString());
     }
   }
 
@@ -87,7 +131,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
     final DateTime? picked = await showDatePicker(
       locale: Locale('cs', 'CZ'), // Czech
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: departureDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       builder: (BuildContext context, Widget? child) {
@@ -105,6 +149,10 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
         computeRemainingDays();
         computeEarnedMoney();
       });
+
+      // Save departure date to shared preferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('departureDate', departureDate.toString());
     }
   }
 
@@ -128,11 +176,27 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
 
   void computeEarnedMoney() {
     if (arrivalDate != null && earnedMoneyController.text.isNotEmpty) {
-      int earnedMoneyPerDay = int.parse(earnedMoneyController.text);
+      int earnedMoneyPerDay = int.tryParse(earnedMoneyController.text) ?? 0;
       totalEarnedMoney = earnedMoneyPerDay * passedDays;
+      saveEarnedMoney(totalEarnedMoney); // Save earned money value
+
+      // Save the input value to shared preferences
+      saveEarnedMoneyPerDay(earnedMoneyPerDay);
     } else {
       totalEarnedMoney = 0;
+      saveEarnedMoney(0); // Save 0 when no value is available
     }
+  }
+
+  void saveEarnedMoneyPerDay(int value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('earnedMoneyPerDay', value);
+  }
+
+  void handleCheckButton() {
+    setState(() {
+      computeEarnedMoney();
+    });
   }
 
   @override
@@ -362,37 +426,39 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                   ),
                 ),
                 Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10), // Set circular corners
-                      child: Container(
-                        height: 150,
-                        color: Colors.lightGreen,
-                        child: Center(
-                          child: RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              style: TextStyle(
-                                color: Colors.black,
+                  child: GestureDetector(
+                    onTap: handleCheckButton,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10), // Set circular corners
+                        child: Container(
+                          height: 150,
+                          color: Colors.lightGreen,
+                          child: Center(
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),
+                                children: [
+                                  TextSpan(
+                                    text: 'Vyděláno: \n',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '$totalEarnedMoney Kč',
+                                    style: TextStyle(
+                                      fontSize: 40,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              children: [
-                                TextSpan(
-                                  text: 'Vyděláno: \n',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '$totalEarnedMoney',
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ),
