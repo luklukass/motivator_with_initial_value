@@ -46,6 +46,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   int remainingDays = 0;
   int passedDays = 0;
   int totalEarnedMoney = 0;
+  var f = NumberFormat('#,###');
   TextEditingController earnedMoneyController = TextEditingController();
 
   void saveEarnedMoney(int value) async {
@@ -451,7 +452,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                                     ),
                                   ),
                                   TextSpan(
-                                    text: '$totalEarnedMoney Kč',
+                                    text: '${f.format(totalEarnedMoney)}'.replaceAll(',', ' '),
                                     style: TextStyle(
                                       fontSize: 40,
                                       fontWeight: FontWeight.bold,
