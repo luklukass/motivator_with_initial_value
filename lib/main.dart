@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pie_chart/pie_chart.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,6 +50,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   int totalSalary = 0;
   var f = NumberFormat('#,###');
   TextEditingController earnedMoneyController = TextEditingController();
+
 
   void saveEarnedMoney(int value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -104,6 +106,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
       }
     });
   }
+
 
   @override
   void dispose() {
@@ -327,6 +330,36 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                   ),
                 ],
               ),
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: handleCheckButt,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10), // Set circular corners
+                        child: Container(
+                          height: 100,
+                          color: Colors.grey,
+                          child: Center(
+                            child: RichText(
+                              textAlign: TextAlign.center,
+                              text: TextSpan(
+                                style: TextStyle(
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 20), // Add a gap between rows
             Row(
@@ -553,6 +586,192 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                 ),
               ],
             ),
+            SizedBox(height: 15),
+             Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        SizedBox(height: 16), // Add the desired gap height here
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            height: 300,
+                            color: Colors.grey,
+                            child: Center(
+                              child: PieChart(
+                                dataMap: {
+                                  'Zbývající dny': remainingDays.toDouble(),
+                                  'Uběhlé dny': passedDays.toDouble(),
+                                },
+                                colorList: [Colors.red, Colors.green],
+                                chartRadius: 290,
+                                legendOptions: LegendOptions(
+                                  showLegends: false,
+                                ),
+                                chartValuesOptions: ChartValuesOptions(
+                                  showChartValueBackground: false,
+                                  showChartValues: true,
+                                  showChartValuesInPercentage: true,
+                                  chartValueStyle: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+
+                                  ),
+                                ),
+                              ),
+                            ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              children: [
+                Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10), // Set circular corners
+                        child: Container(
+                          height: 40,
+                          color: Colors.grey,
+                          child: Center(
+
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.circle, color: Colors.red),
+                                SizedBox(width: 4),
+                                Text('Zbývající dny',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Icon(Icons.circle, color: Colors.green),
+                                SizedBox(width: 4),
+                                Text('Uběhlé dny',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+
+                                ),
+                              ],
+
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ),
+              ],
+            ),
+
+            SizedBox(height: 15),
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        SizedBox(height: 16), // Add the desired gap height here
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            height: 300,
+                            color: Colors.grey,
+                            child: Center(
+                              child: PieChart(
+                                dataMap: {
+                                  'Zbývající dny': totalSalary.toDouble(),
+                                  'Uběhlé dny': totalEarnedMoney.toDouble(),
+                                },
+                                colorList: [Colors.blue, Colors.orange],
+                                chartRadius: 290,
+                                legendOptions: LegendOptions(
+                                  showLegends: false,
+                                ),
+                                chartValuesOptions: ChartValuesOptions(
+                                  showChartValueBackground: false,
+                                  showChartValues: true,
+                                  showChartValuesInPercentage: true,
+                                  chartValueStyle: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10), // Set circular corners
+                      child: Container(
+                        height: 40,
+                        color: Colors.grey,
+                        child: Center(
+
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.circle, color: Colors.blue),
+                              SizedBox(width: 4),
+                              Text('Celková částka',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Icon(Icons.circle, color: Colors.orange),
+                              SizedBox(width: 4),
+                              Text('Vyděláno',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+
+                              ),
+                            ],
+
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
           ],
         ),
       ),
