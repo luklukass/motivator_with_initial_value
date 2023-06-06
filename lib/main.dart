@@ -277,7 +277,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
     return Scaffold(
         appBar: AppBar(
         title: const Text('Motivator'),
-          actions: [
+          /*actions: [
             GestureDetector(
               onTap: () {
                 showDialog(
@@ -309,7 +309,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                  child: Icon(Icons.help),
               ),
             ),
-          ],
+          ],*/
         ),
       body: SingleChildScrollView(
         child: Column(
