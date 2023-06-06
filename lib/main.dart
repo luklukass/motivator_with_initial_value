@@ -3,9 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pie_chart/pie_chart.dart';
+import 'dart:async';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
   runApp(const MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -50,6 +53,17 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   int totalSalary = 0;
   var f = NumberFormat('#,###');
   TextEditingController earnedMoneyController = TextEditingController();
+  Timer? countdownTimer;
+  Duration remainingTime = Duration.zero;
+
+  void updateRemainingTime() {
+    if (departureDate != null) {
+      setState(() {
+        remainingTime = departureDate!.difference(DateTime.now());
+        remainingDays = remainingTime.inDays;
+      });
+    }
+  }
 
 
   void saveEarnedMoney(int value) async {
@@ -65,7 +79,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   @override
   void initState() {
     super.initState();
-    earnedMoneyController.addListener(computeEarnedMoney);
+    earnedMoneyController.addListener(computetotalSalary);
 
     // Retrieve saved dates from shared preferences
     SharedPreferences.getInstance().then((prefs) {
@@ -107,13 +121,13 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
     });
   }
 
-
   @override
   void dispose() {
     earnedMoneyController.removeListener(computeEarnedMoney);
-    earnedMoneyController.dispose();
     super.dispose();
   }
+
+
 
   Future<void> _selectArrivalDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -167,6 +181,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
         computeRemainingDays();
         computeEarnedMoney();
         computetotalSalary();
+        startCountdownTimer();
       });
 
       // Save departure date to shared preferences
@@ -177,8 +192,8 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
 
   void computeRemainingDays() {
     if (departureDate != null) {
-      final difference = departureDate!.difference(DateTime.now());
-      remainingDays = difference.inDays + 1;
+      remainingTime = departureDate!.difference(DateTime.now());
+      remainingDays = remainingTime.inDays;
     } else {
       remainingDays = 0;
     }
@@ -187,10 +202,26 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   void computePassedDays() {
     if (arrivalDate != null) {
       final difference = arrivalDate!.difference(DateTime.now()).abs();
-      passedDays = difference.inDays;
+      passedDays = difference.inSeconds ~/ Duration.secondsPerDay;
     } else {
       passedDays = 0;
     }
+  }
+
+  void startCountdownTimer() {
+    updateRemainingTime(); // Update the remaining time immediately
+
+    countdownTimer?.cancel(); // Cancel any existing timer
+
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        updateRemainingTime(); // Update the remaining time every second
+
+        if (remainingTime.inSeconds <= 0) {
+          countdownTimer?.cancel(); // Stop the timer when the countdown is finished
+        }
+      });
+    });
   }
 
   void computetotalSalary() {
@@ -254,7 +285,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                     builder: (BuildContext context) {
                       return AlertDialog(
                         title: const Text('Nápověda'),
-                          content: const Text('Po vybrání datumů příjezdu a odjezdu a zadání vydělané částky za jeden den, je třeba kliknout na pole "Vyděláno" a "Celková částka" k výpočtu hodnot.',
+                          content: const Text('Po vybrání datumů příjezdu a odjezdu a zadání vydělané částky za jeden den, je třeba kliknout na pole "Vyděláno" a "Celková částka" k výpočtu hodnot. To je nutné udělat také v případě změny částky za den.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 18, // Set the font size to 20
@@ -376,7 +407,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                         borderRadius: BorderRadius.circular(10), // Set circular corners
                         child: Container(
                           height: 100,
-                          color: Colors.grey,
+                          color: Colors.orangeAccent,
                           child: Center(
                             child: RichText(
                               textAlign: TextAlign.center,
@@ -384,6 +415,24 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                                 style: TextStyle(
                                   color: Colors.black,
                                 ),
+                                children: [
+                                  TextSpan(
+                                    text: ' $remainingDays dnů a ',
+                                    style: TextStyle(
+                                      fontSize: 35,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '${remainingTime.inHours.remainder(24).toString().padLeft(2, '0')}:${remainingTime.inMinutes.remainder(60).toString().padLeft(2, '0')}:${remainingTime.inSeconds.remainder(60).toString().padLeft(2, '0')}',
+                                    style: TextStyle(
+                                      fontSize: 35,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -521,6 +570,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                                 ),
                                 onChanged: (value) {
                                   computeEarnedMoney();
+                                  computetotalSalary();
                                 },
                               ),
                             ],
@@ -637,7 +687,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                               child: PieChart(
                                 dataMap: {
                                   'Zbývající dny': remainingDays.toDouble(),
-                                  'Uběhlé dny': passedDays.toDouble(),
+                                  'Uplynulé dny': passedDays.toDouble(),
                                 },
                                 colorList: [Colors.red, Colors.green],
                                 chartRadius: 290,
