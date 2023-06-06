@@ -81,7 +81,13 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   void initState() {
     super.initState();
     earnedMoneyController.addListener(computeEarnedMoney);
+    earnedMoneyController.addListener(computetotalSalary);
     startCountdownTimer();
+    computePassedDays();
+    computeRemainingDays();
+    computeEarnedMoney();
+    computetotalSalary();
+
     initializeDateFormatting(); // Add this line to initialize date formatting
 
     // Retrieve saved dates and values from shared preferences
@@ -586,8 +592,8 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                   ),
                 ),
                 Expanded(
-                  child: GestureDetector(
-                    onTap: handleCheckButton,
+                  //child: GestureDetector(
+                    //onTap: handleCheckButton,
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: ClipRRect(
@@ -625,15 +631,15 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       ),
                     ),
                   ),
-                ),
+                //),
               ],
             ),
             SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
-                  child: GestureDetector(
-                    onTap: handleCheckButt,
+                  //child: GestureDetector(
+                   // onTap: handleCheckButt,
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: ClipRRect(
@@ -671,7 +677,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       ),
                     ),
                   ),
-                ),
+                //),
               ],
             ),
             SizedBox(height: 15),
