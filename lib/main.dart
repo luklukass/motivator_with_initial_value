@@ -80,7 +80,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   void initState() {
     super.initState();
     earnedMoneyController.addListener(computetotalSalary);
-
+    startCountdownTimer();
     // Retrieve saved dates from shared preferences
     SharedPreferences.getInstance().then((prefs) {
       if (prefs.containsKey('arrivalDate')) {
@@ -743,7 +743,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                                 SizedBox(width: 16),
                                 Icon(Icons.circle, color: Colors.green),
                                 SizedBox(width: 4),
-                                Text('Uběhlé dny',
+                                Text('Uplynulé dny',
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: Colors.black,
@@ -779,8 +779,8 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                             child: Center(
                               child: PieChart(
                                 dataMap: {
-                                  'Zbývající dny': totalSalary.toDouble(),
-                                  'Uběhlé dny': totalEarnedMoney.toDouble(),
+                                  'Celková částka': (totalSalary.toDouble() - totalEarnedMoney.toDouble()),
+                                  'Vyděláno': totalEarnedMoney.toDouble(),
                                 },
                                 colorList: [Colors.blue, Colors.orange],
                                 chartRadius: 290,
