@@ -244,9 +244,42 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+        appBar: AppBar(
         title: const Text('Motivator'),
-      ),
+          actions: [
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Nápověda'),
+                          content: const Text('Po vybrání datumů příjezdu a odjezdu a zadání vydělané částky za jeden den, je třeba kliknout na pole "Vyděláno" a "Celková částka" k výpočtu hodnot.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18, // Set the font size to 20
+                              color: Colors.black,
+
+                            ),),
+                              actions: [
+                                ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  child: const Text('Rozumím'),
+                                ),
+                              ],
+                      );
+                    },
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                 child: Icon(Icons.help),
+              ),
+            ),
+          ],
+        ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -263,14 +296,14 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10), // Set circular corners
                         child: Container(
-                          height: 150,
+                          height: 100,
                           color: Colors.blue,
                           child: Center(
                             child: arrivalDate == null
                                 ? Text(
                               'Vyber datum příjezdu',
                               style: TextStyle(
-                                fontSize: 25, // Set the font size to 20
+                                fontSize: 22, // Set the font size to 20
                                 fontWeight: FontWeight.bold, // Set the font weight to bold
                                 color: Colors.black, // Set the text color to white
                               ),
@@ -300,14 +333,14 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10), // Set circular corners
                           child: Container(
-                            height: 150,
+                            height: 100,
                             color: Colors.red,
                             child: Center(
                               child: departureDate == null
                                   ? Text(
                                 'Vyber datum odjezdu',
                                 style: TextStyle(
-                                  fontSize: 25, // Set the font size to 20
+                                  fontSize: 22, // Set the font size to 20
                                   fontWeight: FontWeight.bold, // Set the font weight to bold
                                   color: Colors.black, // Set the text color to white
                                 ),
@@ -370,7 +403,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        height: 150,
+                        height: 100,
                         color: Colors.grey,
                         child: Center(
                           child: RichText(
@@ -408,7 +441,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10), // Set circular corners
                       child: Container(
-                        height: 150,
+                        height: 100,
                         color: Colors.grey,
                         child: Center(
                           child: RichText(
@@ -451,7 +484,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
-                        height: 150,
+                        height: 120,
                         color: Colors.grey,
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -505,7 +538,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10), // Set circular corners
                         child: Container(
-                          height: 150,
+                          height: 120,
                           color: Colors.lightGreen,
                           child: Center(
                             child: RichText(
@@ -551,7 +584,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(10), // Set circular corners
                         child: Container(
-                          height: 150,
+                          height: 100,
                           color: Colors.grey,
                           child: Center(
                             child: RichText(
