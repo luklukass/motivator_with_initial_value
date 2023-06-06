@@ -76,12 +76,15 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
     prefs.setInt('totalSalary', value);
   }
 
+
   @override
   void initState() {
     super.initState();
-    earnedMoneyController.addListener(computetotalSalary);
+    earnedMoneyController.addListener(computeEarnedMoney);
     startCountdownTimer();
-    // Retrieve saved dates from shared preferences
+    initializeDateFormatting(); // Add this line to initialize date formatting
+
+    // Retrieve saved dates and values from shared preferences
     SharedPreferences.getInstance().then((prefs) {
       if (prefs.containsKey('arrivalDate')) {
         setState(() {
@@ -108,11 +111,13 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
           totalEarnedMoney = prefs.getInt('earnedMoney') ?? 0;
         });
       }
+
       if (prefs.containsKey('earnedMoneyPerDay')) {
         setState(() {
           earnedMoneyController.text = prefs.getInt('earnedMoneyPerDay').toString();
         });
       }
+
       if (prefs.containsKey('totalSalary')) {
         setState(() {
           totalSalary = prefs.getInt('totalSalary') ?? 0;
