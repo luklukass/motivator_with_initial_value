@@ -1,6 +1,6 @@
-# motivator
+# motivator_v2
 
-Calculator to compute remaining, passed days and earned money
+More specific calculator.
 
 ## Getting Started
 
