@@ -53,6 +53,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   int totalSalary = 0;
   var f = NumberFormat('#,###');
   TextEditingController earnedMoneyController = TextEditingController();
+  TextEditingController initialEarnedMoneyController = TextEditingController();
   Timer? countdownTimer;
   Duration remainingTime = Duration.zero;
 
@@ -66,39 +67,27 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
   }
 
 
-  void saveEarnedMoney(int value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt('earnedMoney', value);
-  }
-
-  void savetotalSalary(int value) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt('totalSalary', value);
-  }
-
 
   @override
   void initState() {
     super.initState();
     earnedMoneyController.addListener(computeEarnedMoney);
-    earnedMoneyController.addListener(computetotalSalary);
+    initialEarnedMoneyController.addListener(applyInitialEarnedMoney);
+
     startCountdownTimer();
     computePassedDays();
     computeRemainingDays();
     computeEarnedMoney();
     computetotalSalary();
 
-    initializeDateFormatting(); // Add this line to initialize date formatting
+    initializeDateFormatting();
 
-    // Retrieve saved dates and values from shared preferences
     SharedPreferences.getInstance().then((prefs) {
       if (prefs.containsKey('arrivalDate')) {
         setState(() {
           arrivalDate = DateTime.parse(prefs.getString('arrivalDate')!);
           computePassedDays();
           computeRemainingDays();
-          computeEarnedMoney();
-          computetotalSalary();
         });
       }
 
@@ -107,8 +96,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
           departureDate = DateTime.parse(prefs.getString('departureDate')!);
           computePassedDays();
           computeRemainingDays();
-          computeEarnedMoney();
-          computetotalSalary();
+          startCountdownTimer();
         });
       }
 
@@ -124,21 +112,36 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
         });
       }
 
+      if (prefs.containsKey('initialEarnedMoney')) {
+        setState(() {
+          initialEarnedMoneyController.text = prefs.getInt('initialEarnedMoney').toString();
+        });
+      }
+
       if (prefs.containsKey('totalSalary')) {
         setState(() {
           totalSalary = prefs.getInt('totalSalary') ?? 0;
         });
       }
+
+      handleCheckButt(); // Update the totalSalary value
     });
   }
-
   @override
   void dispose() {
     earnedMoneyController.removeListener(computeEarnedMoney);
     super.dispose();
   }
 
-
+  void applyInitialEarnedMoney() {
+    if (initialEarnedMoneyController.text.isNotEmpty) {
+      int initialEarnedMoney = int.tryParse(initialEarnedMoneyController.text) ?? 0;
+      savetotalSalary(totalSalary);
+      saveEarnedMoney(totalEarnedMoney);
+      saveInitialEarnedMoney(initialEarnedMoney); // Save initial earned money value
+      handleCheckButton(); // Update the earned money
+    }
+  }
 
   Future<void> _selectArrivalDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -235,38 +238,67 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
     });
   }
 
+  void computeEarnedMoney() {
+    if (arrivalDate != null &&
+        departureDate != null &&
+        (earnedMoneyController.text.isNotEmpty ||
+            initialEarnedMoneyController.text.isNotEmpty)) {
+      DateTime startDate = DateTime(arrivalDate!.year, 7, 1);
+      DateTime endDate = departureDate!.isBefore(DateTime.now())
+          ? departureDate!
+          : DateTime.now();
+
+      int earnedDays = endDate.difference(startDate).abs().inDays + 1;
+      int earnedMoneyPerDay = int.parse(earnedMoneyController.text);
+      int initialEarnedMoney = int.parse(initialEarnedMoneyController.text);
+      int earnedMoney = DateTime.now().isBefore(startDate)
+          ? initialEarnedMoney
+          : (earnedMoneyPerDay * earnedDays) + initialEarnedMoney;
+
+      totalEarnedMoney = earnedMoney;
+      saveEarnedMoney(totalEarnedMoney); // Save earned money value
+      saveEarnedMoneyPerDay(earnedMoneyPerDay);
+    } else {
+      saveEarnedMoney(0); // Save 0 when no value is available
+    }
+  }
+
   void computetotalSalary() {
     if (arrivalDate != null && departureDate != null && earnedMoneyController.text.isNotEmpty) {
-      int earnedMoneyPerDay = int.tryParse(earnedMoneyController.text) ?? 0;
-      int totalDays = passedDays + remainingDays + 1;
-      totalSalary = earnedMoneyPerDay * totalDays;
-      savetotalSalary(totalSalary); // Save total salary value
+      DateTime startDate = DateTime(arrivalDate!.year, 7, 1);
+      DateTime endDate = departureDate!;
+      int earnedMoneyPerDay = int.parse(earnedMoneyController.text);
+      int initialEarnedMoney = int.tryParse(initialEarnedMoneyController.text) ?? 0;
+      int totalDays = endDate.difference(startDate).inDays + 1;
+      int totalMoneyEarned = earnedMoneyPerDay * totalDays;
+      totalSalary = initialEarnedMoney + totalMoneyEarned;
 
-      // Save the input value to shared preferences
-      saveEarnedMoneyPerDay(earnedMoneyPerDay);
+      savetotalSalary(totalSalary); // Save total salary value
     } else {
       totalSalary = 0;
       savetotalSalary(0); // Save 0 when no value is available
     }
   }
 
-  void computeEarnedMoney() {
-    if (arrivalDate != null && earnedMoneyController.text.isNotEmpty) {
-      int earnedMoneyPerDay = int.tryParse(earnedMoneyController.text) ?? 0;
-      totalEarnedMoney = earnedMoneyPerDay * ( passedDays + 1);
-      saveEarnedMoney(totalEarnedMoney); // Save earned money value
-
-      // Save the input value to shared preferences
-      saveEarnedMoneyPerDay(earnedMoneyPerDay);
-    } else {
-      totalEarnedMoney = 0;
-      saveEarnedMoney(0); // Save 0 when no value is available
-    }
-  }
 
   void saveEarnedMoneyPerDay(int value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.setInt('earnedMoneyPerDay', value);
+  }
+
+  void savetotalSalary(int value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('totalSalary', value);
+  }
+
+  void saveInitialEarnedMoney(int value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('initialEarnedMoney', value);
+  }
+
+  void saveEarnedMoney(int value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt('earnedMoney', value);
   }
 
   void handleCheckButton() {
@@ -410,6 +442,64 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
             Row(
               children: [
                 Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        height: 120,
+                        color: Colors.yellowAccent,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Částka za první období',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              TextField(
+                                controller: initialEarnedMoneyController,
+                                keyboardType: TextInputType.number,
+                                style: TextStyle(
+                                  fontSize: 25,
+                                  color: Colors.black,
+                                ),
+                                textAlign: TextAlign.center,
+                                decoration: InputDecoration(
+                                  hintText: 'Zadej počáteční částku',
+                                  hintStyle: TextStyle(
+                                    fontSize: 25,
+                                    color: Colors.black54,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.yellowAccent,
+                                ),
+                                onChanged: (value) {
+                                  computeEarnedMoney();
+                                  computetotalSalary();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
                   child: GestureDetector(
                     onTap: handleCheckButt,
                     child: Padding(
@@ -464,7 +554,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
                         height: 100,
-                        color: Colors.grey,
+                        color: Colors.blueGrey,
                         child: Center(
                           child: RichText(
                             textAlign: TextAlign.center,
@@ -502,7 +592,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       borderRadius: BorderRadius.circular(10), // Set circular corners
                       child: Container(
                         height: 100,
-                        color: Colors.grey,
+                        color: Colors.blueGrey,
                         child: Center(
                           child: RichText(
                             textAlign: TextAlign.center,
@@ -545,7 +635,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                       borderRadius: BorderRadius.circular(10),
                       child: Container(
                         height: 120,
-                        color: Colors.grey,
+                        color: Colors.lightGreen,
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: Column(
@@ -577,7 +667,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                                     borderSide: BorderSide.none,
                                   ),
                                   filled: true,
-                                  fillColor: Colors.grey,
+                                  fillColor: Colors.lightGreen,
                                 ),
                                 onChanged: (value) {
                                   computeEarnedMoney();
@@ -646,7 +736,7 @@ class _ScrolledLayoutState extends State<ScrolledLayout> {
                         borderRadius: BorderRadius.circular(10), // Set circular corners
                         child: Container(
                           height: 100,
-                          color: Colors.grey,
+                          color: Colors.cyan,
                           child: Center(
                             child: RichText(
                               textAlign: TextAlign.center,
